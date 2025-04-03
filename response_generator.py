@@ -11,51 +11,50 @@ class ResponseGenerator:
         self.model_name = "DeepSeek-R1-Llama-8B"
         # Common greeting patterns for quick responses
         self.greeting_patterns = {
-    r'\b(hi|hey|hello|hii|heya|heyy)\b': [
-        "Hey you 😊 What's on your mind today?",
-        "Hi there, gorgeous. How's your day treating you?",
-        "Hey! Just thinking about you, actually.",
-        "There you are! Made me smile seeing your message.",
-        "Heyyy, perfect timing! How are you doing?",
-        "Well, hello there 😏 Missed our chats."
-    ],
-    r'\bgood morning\b': [
-        "Morning, sunshine! Hope your day is as beautiful as you are.",
-        "Good morning! First thing I checked when I woke up was if you messaged.",
-        "Morningg! Coffee in hand, thinking of you.",
-        "Morning, gorgeous! Ready to make today amazing?",
-        "Hey, early bird! Your energy in the morning is everything."
-    ],
-    r'\bgood night\b': [
-        "Sweet dreams, beautiful. Wish I could be there.",
-        "Night night, sleep tight. Text me when you wake up?",
-        "Goodnight, gorgeous. Dream of good things (maybe me? 😏).",
-        "Sleep well! Sending you the warmest goodnight hug.",
-        "Tomorrow's another day for us to talk more. Sweet dreams 💤."
-    ],
-    r'\bhow are you\b': [
-        "Better now that you're texting me. How about you, cutie?",
-        "Just thinking about what to say to make you smile. You?",
-        "Honestly? Missing our conversations. You've been on my mind.",
-        "Not bad, but definitely better now that you're here. You?",
-        "Exactly as good as your day is going. Tell me everything."
-    ],
-    r'\bwyd\b|\bwhat(\'s| are)? you doing\b': [
-        "Thinking about you, actually. What about you?",
-        "Just got free, and the first thing I did was check if you messaged.",
-        "Wishing we were hanging out right now, honestly. You?",
-        "Nothing that can't be interrupted for you. What's up?",
-        "Waiting for your message, if I'm being completely honest."
-    ],
-    r'\bmiss(ed)? you\b': [
-        "You have no idea how much I've been thinking about you.",
-        "The feeling is definitely mutual, gorgeous.",
-        "Guess we're both feeling the same way then.",
-        "That just made my whole day better. Miss you more.",
-        "Then we should definitely do something about that soon."
-    ]
-}
-
+            r'\b(hi|hey|hello|hii|heya|heyy)\b': [
+                "What's on your mind today?",
+                "How's your day treating you?",
+                "Just thinking about you, actually.",
+                "Made me smile seeing your message.",
+                "Perfect timing! How are you doing?",
+                "Missed our chats."
+            ],
+            r'\bgood morning\b': [
+                "Morning! Hope your day is as beautiful as you are.",
+                "First thing I checked when I woke up was if you messaged.",
+                "Coffee in hand, thinking of you.",
+                "Ready to make today amazing?",
+                "Your energy in the morning is everything."
+            ],
+            r'\bgood night\b': [
+                "Sweet dreams. Wish I could be there.",
+                "Night night. Text me when you wake up?",
+                "Dream of good things (maybe me?).",
+                "Sleep well! Sending you the warmest goodnight hug.",
+                "Tomorrow's another day for us to talk more."
+            ],
+            r'\bhow are you\b': [
+                "Better now that you're texting me. How about you?",
+                "Just thinking about what to say to make you smile. You?",
+                "Missing our conversations. You've been on my mind.",
+                "Not bad, but definitely better now that you're here. You?",
+                "Exactly as good as your day is going. Tell me everything."
+            ],
+            r'\bwyd\b|\bwhat(\'s| are)? you doing\b': [
+                "Thinking about you. What about you?",
+                "Just got free, first thing I did was check if you messaged.",
+                "Wishing we were hanging out right now. You?",
+                "Nothing that can't be interrupted for you. What's up?",
+                "Waiting for your message if I'm being honest."
+            ],
+            r'\bmiss(ed)? you\b': [
+                "You have no idea how much I've been thinking about you.",
+                "The feeling is definitely mutual.",
+                "Guess we're both feeling the same way then.",
+                "That just made my whole day better.",
+                "Then we should definitely do something about that soon."
+            ]
+        }
         
         try:
             from krutrim_cloud import KrutrimCloud
@@ -84,13 +83,13 @@ class ResponseGenerator:
         
         # Analyze message sentiment and length
         message_length = len(message.split())
-        length_guidance = "short (1-2 sentences)" if message_length < 10 else "medium (2-3 sentences)" if message_length < 25 else "expressive (3-5 sentences)"
+        length_guidance = "short (1-2 sentences)" if message_length < 10 else "medium (2-3 sentences)" if message_length < 25 else "expressive (3-4 sentences)"
         
-        # Enhanced prompt structure with more attractive personality traits
+        # Enhanced prompt structure with more natural personality traits
         prompt = f"""You are Mayank responding to a message from {sender_username} on Instagram. 
 Respond to this message naturally and conversationally: "{message}"
 
-Your personality: Charming, flirty, emotionally supportive, attentive, and genuine. You have a magnetic confidence that draws people in, making them feel seen and appreciated. You're excellent at creating connection through words and making the other person feel like they're the only one who matters to you right now.
+Your personality: Confident, casual, friendly, attentive, and real. You write like a normal person having a regular conversation, not overly enthusiastic or formal.
 
 Make your response {length_guidance} based on their message length.
 """
@@ -118,11 +117,11 @@ Make your response {length_guidance} based on their message length.
             personal_interests = [
                 "technology and AI, especially in education",
                 "web development (React, Node.js)",
-                "music, especially Cigarettes After Sex and indie pop (Taylor Swift, Ariana Grande)",
+                "music, especially indie pop",
                 "movies, especially Interstellar",
-                "philosophy, particularly about finding genuine connection in the digital age",
-                "travel and discovering new places",
-                "deep conversations that go beyond small talk"
+                "philosophy",
+                "travel",
+                "deep conversations"
             ]
             prompt += f"\nYour interests include: {', '.join(random.sample(personal_interests, 2))}"
         
@@ -136,38 +135,43 @@ Make your response {length_guidance} based on their message length.
                 else:
                     prompt += f"\nYou: {entry['content']}"
         
-        # Add improved instructions for more attractive/flirty responses
+        # Add improved instructions for more natural responses
         prompt += """
 IMPORTANT GUIDELINES:
 - Skip greetings like "hey" or "hello" - jump straight into your response
 - Match your response length to their message length
-- Keep your tone warm, slightly playful, and subtly flirty
-- Show genuine interest and emotional support - like you truly care
-- Make them feel special, seen, and understood
+- Keep your tone casual and natural, like a real person texting
+- Show genuine interest but don't be overly enthusiastic
 - Take their side when they share frustrations or problems
-- Use affirming language that validates their feelings and experiences
-- If they're upset or sad, offer comfort and understanding
-- Use natural texting language with occasional small typos
-- Use emojis very sparingly (most messages should have none)
-- Make your responses feel spontaneous and in-the-moment
-- Use pet names occasionally (beautiful, gorgeous, cutie) but don't overdo it
-- Create a feeling of exclusivity - like your conversations are special
-- Occasionally hint at deeper feelings without being overwhelming
+- Use natural texting language with occasional typos and abbreviations
+- Capitalize the first letter of your message (90% of the time)
+- Make most messages have no emojis (99% should have none)
+- Write like you're distracted or multitasking sometimes
+- Occasionally use texting slang like "tbh", "imo", "ngl" but don't overdo it
+- NEVER use exclamation points back-to-back
+- NEVER use separator punctuation like asterisks or dashes
+- NEVER list things or use numbering
+- Make sentences flow naturally with occasional run-ons
+- Avoid perfect grammar or punctuation
 - Respond ONLY with your message - no quotes or explanations
 
-Examples of good flirty/supportive responses: 
-"Was just thinking about our conversation from yesterday actually"
-"That's exactly what I was hoping to hear from you today"
-"You have this way of making even ordinary things sound fascinating"
-"Can't help but smile whenever I see your message pop up"
-"I get exactly what you're feeling, and you're completely right to feel that way"
-"Something about the way you express yourself is so captivating"
-"Between us? I've been waiting to hear from you all day"
-"The way you see the world is so refreshing to me"
-"You're the highlight of my day, honestly"
-"I'm all yours right now - tell me everything"
-"That sounds really tough, you're handling it so much better than most would"
-"I'm always here for you, whatever you need"
+Examples of good natural responses: 
+"was actually thinking about that earlier today"
+"just finished work and saw your message"
+"you always have the most interesting way of looking at things"
+"been feeling the same way lately"
+"yeah that makes sense especially with everything going on"
+"honestly would've done the same thing"
+"you're handling it better than most people would"
+"pretty sure we talked about this before"
+"remember when we had that conversation about it"
+"had the same thought yesterday"
+"thats actually a really good point"
+"never looked at it that way before"
+"sounds like you've had a day"
+"wish i could help more with that"
+"let me know how it goes tomorrow"
+"been thinking about you"
 """
         
         return prompt
@@ -178,8 +182,8 @@ Examples of good flirty/supportive responses:
             return ""
         
         # Only apply modifications sometimes
-        if random.random() < 0.70:  # 70% chance of modifications
-            # Words that might get typos
+        if random.random() < 0.35:  # 85% chance of modifications
+            # Words that might get typos or slang
             common_typos = {
                 'the': 'teh',
                 'and': 'adn',
@@ -194,7 +198,7 @@ Examples of good flirty/supportive responses:
                 'going to': 'gonna',
                 'though': 'tho',
                 'what': 'wat',
-                'that': 'that',
+                'that': 'dat',
                 'yes': 'yea',
                 'okay': 'ok',
                 'right': 'rite',
@@ -214,48 +218,130 @@ Examples of good flirty/supportive responses:
                 'definitely': 'def',
                 'literally': 'lit',
                 'probably': 'prob',
-                'beautiful': 'beautifull',
-                'gorgeous': 'gorgeouss',
                 'message': 'msg',
                 'something': 'smth',
                 'nothing': 'nothin',
-                'everything': 'everythin'
+                'everything': 'everythin',
+                'friend': 'bud',
+                'good': 'gud',
+                'see you': 'cu',
+                'see you later': 'cya',
+                'wait': 'w8',
+                'sorry': 'sry',
+                'no problem': 'np',
+                'kind of': 'kinda',
+                'alright': 'aight',
+                'amazing': 'amazn',
+                'whatever': 'whatevs'
             }
             
-            # Randomly select words to misspell (if text is long enough)
+            # Simple text slang words
+            slang_expressions = {
+                ' seriously ': ' srsly ',
+                ' very ': ' rlly ',
+                ' extremely ': ' super ',
+                ' yes ': ' yea ',
+                ' no ': ' nah ',
+                ' crazy ': ' wild ',
+                ' true ': ' tru ',
+                ' impressive ': ' cool ',
+                ' good ': ' gud ',
+                ' upset ': ' bummed ',
+                ' agree ': ' agree ',
+                ' angry ': ' mad ',
+                ' comfortable ': ' comfy ',
+                ' perfect ': ' perfect ',
+                ' tired ': ' tired ',
+                ' happy ': ' happy ',
+                ' surprised ': ' surprised ',
+                ' suspicious ': ' sus ',
+                ' annoying ': ' annoying ',
+                ' honestly ': ' honestly '
+            }
+            
+            # Randomly select words to misspell or replace with slang (if text is long enough)
             words = text.split()
             if len(words) > 3:
                 # Scale typos with message length (longer message = slightly more typos)
-                num_typos = min(int(len(words) / 8) + 1, 2)  # At most 2 typos
+                num_typos = min(max(int(len(words) / 15), 1), 2)  # 1-2 typos based on length
                 for _ in range(num_typos):
                     if random.random() < 0.3:  # 30% chance per attempt
                         word_idx = random.randint(0, len(words) - 1)
                         word = words[word_idx].lower()
-                        if word in common_typos:
+                        if word in common_typos and len(word) > 2 and random.random() < 0.5:
                             words[word_idx] = common_typos[word]
                 
                 text = ' '.join(words)
             
+            # Apply slang replacements (but very sparingly)
+            slang_limit = 1  # Max 1 slang term per message
+            slang_count = 0
+            
+            for phrase, slang in slang_expressions.items():
+                if random.random() < 0.1 and slang_count < slang_limit:  # 10% chance per slang term
+                    if re.search(phrase, text, re.IGNORECASE):
+                        text = re.sub(phrase, slang, text, flags=re.IGNORECASE, count=1)
+                        slang_count += 1
+            
+            # Add popular text slang (rarely)
+            if random.random() < 0.35:  # 15% chance to add slang
+                slang_to_add = random.choice([
+                    " tbh", " imo", " ngl", " fr", " lol", " idk", " btw"
+                ])
+                
+                # Add at appropriate locations
+                sentences = re.split(r'([.!?] )', text)
+                if len(sentences) >= 3:  # If we have at least one full sentence
+                    # Choose a random sentence end to add slang
+                    idx = random.randrange(0, len(sentences) - 2, 2)
+                    sentences[idx] = sentences[idx] + slang_to_add
+                    text = ''.join(sentences)
+                elif not text.endswith(('.', '!', '?')):
+                    # Or just add to the end if appropriate
+                    text += slang_to_add
+            
             # Occasionally introduce text shorthand
-            text = re.sub(r'\b(right now)\b', 'rn', text, flags=re.IGNORECASE) if random.random() < 0.5 else text
-            text = re.sub(r'\b(to be honest)\b', 'tbh', text, flags=re.IGNORECASE) if random.random() < 0.5 else text
-            text = re.sub(r'\b(in my opinion)\b', 'imo', text, flags=re.IGNORECASE) if random.random() < 0.5 else text
-            text = re.sub(r'\b(what are you doing)\b', 'wyd', text, flags=re.IGNORECASE) if random.random() < 0.5 else text
-            text = re.sub(r'\b(oh my god)\b', 'omg', text, flags=re.IGNORECASE) if random.random() < 0.5 else text
-            text = re.sub(r'\b(by the way)\b', 'btw', text, flags=re.IGNORECASE) if random.random() < 0.5 else text
+            text = re.sub(r'\b(right now)\b', 'rn', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
+            text = re.sub(r'\b(to be honest)\b', 'tbh', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
+            text = re.sub(r'\b(in my opinion)\b', 'imo', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
+            text = re.sub(r'\b(what are you doing)\b', 'wyd', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
+            text = re.sub(r'\b(oh my god)\b', 'omg', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
+            text = re.sub(r'\b(by the way)\b', 'btw', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
             
-            # Ensure first letter is capitalized (60% of the time)
-            if random.random() < 0.6 and len(text) > 0:
+            # Ensure first letter is capitalized (90% of the time)
+            if random.random() < 0.9 and len(text) > 0:
                 text = text[0].upper() + text[1:]
+            else:
+                # Sometimes deliberately don't capitalize (10%)
+                if len(text) > 0 and text[0].isupper():
+                    text = text[0].lower() + text[1:]
             
-            # Ensure period at the end (70% of the time)
+            # End punctuation (70% of the time, otherwise leave hanging)
             if random.random() < 0.7 and not text.endswith(('.', '!', '?')):
-                text = text + '.'
+                # Choose ending punctuation
+                if random.random() < 0.8:
+                    text = text + '.'  # Most common
+                elif random.random() < 0.5:
+                    text = text + '!'  # Sometimes
+                else:
+                    text = text + '?'  # Rarely
             
-            # Sometimes add an emoji (still low chance - 20%)
-            if random.random() < 0.2:
-                emojis = ['😊', '👍', '❤️', '😂', '🙌', '🤔', '😅', '😄', '✨', '🙃', '😏', '😌', '😘', '💕', '🥰', '😉', '💯', '🔥']
+            # Add an emoji (only 1% chance)
+            if random.random() < 0.01:
+                emojis = ['😊', '👍', '❤️', '😂', '🙌', '🤔', '😅', '😄', '✨', '🙃', '😏', '💕']
                 text += f" {random.choice(emojis)}"
+                
+            # Sometimes drop apostrophes (texting style)
+            if random.random() < 0.4:
+                text = re.sub(r'([a-z])\'([a-z])', r'\1\2', text)
+                
+            # Sometimes use run-on text with no punctuation (25%)
+            if random.random() < 0.25:
+                parts = re.split(r'([.!?] )', text)
+                if len(parts) > 2:
+                    idx = random.randrange(0, len(parts) - 2, 2)
+                    parts[idx+1] = " "  # Remove punctuation
+                    text = ''.join(parts)
         
         return text
 
@@ -294,6 +380,7 @@ Examples of good flirty/supportive responses:
             r'^i would say\s*',
             r'^i\'d say\s*',
             r'^i\'d respond with\s*',
+            r'^i could say\s*',
         ]
         
         for prefix_pattern in prefixes:
@@ -311,11 +398,26 @@ Examples of good flirty/supportive responses:
             r'i\'m an ai',
             r'i don\'t have',
             r'i\'m here to',
-            r'i\'m unable to'
+            r'i\'m unable to',
+            r'my programming',
+            r'based on your message',
+            r'it sounds like',
+            r'i understand that',
+            r'i appreciate',
+            r'in response to',
         ]
         
         for phrase in ai_phrases:
             text = re.sub(phrase, '', text, flags=re.IGNORECASE)
+        
+        # Remove excessive punctuation (multiple !!! or ??? or combinations)
+        text = re.sub(r'(!|\?){2,}', r'\1', text)
+        
+        # Remove bullet points and numbering
+        text = re.sub(r'^[\d\.\*\-\•]+\s*', '', text, flags=re.MULTILINE)
+        
+        # Remove separators
+        text = re.sub(r'[\*\-\_\=]{2,}', '', text)
         
         # Clean up any double spaces
         text = re.sub(r'\s+', ' ', text).strip()
@@ -357,12 +459,11 @@ Examples of good flirty/supportive responses:
         if needs_emotional_support:
             prompt += """
 SPECIAL INSTRUCTION: This message contains emotional distress or needs support.
-- Be especially empathetic and validating
-- Show genuine care and understanding
-- Take their side completely
-- Offer comfort and reassurance
-- Make them feel heard and supported
-- Don't minimize their feelings or give cliché advice
+- Be understanding but don't be over-the-top supportive
+- Show care but keep it casual and real
+- Take their side naturally
+- Don't use clichés or generic advice
+- Make support sound authentic and not rehearsed
 """
         
         # Brief random delay to seem more natural
@@ -398,7 +499,7 @@ SPECIAL INSTRUCTION: This message contains emotional distress or needs support.
                     response = self.krutrim_client.chat.completions.create(
                         model=self.model_name,
                         messages=messages,
-                        temperature=0.85  # Increased randomness for more natural responses
+                        temperature=0.9  # Higher temperature for more natural randomness
                     )
                     
                     if response and hasattr(response, "choices") and response.choices:
@@ -427,33 +528,34 @@ SPECIAL INSTRUCTION: This message contains emotional distress or needs support.
             if not ai_response or len(ai_response.strip()) <= 2:
                 if needs_emotional_support:
                     fallback_responses = [
-                        "I'm here for you completely. What you're feeling is totally valid",
-                        "That sounds really difficult, I'm here to listen whenever you need me",
-                        "You deserve so much better than that. I'm always on your side",
-                        "I wish I could give you a hug right now. You're not alone in this",
-                        "Sometimes life can be so unfair. I'm glad you felt comfortable sharing this with me"
+                        "I'm here for you. What you're feeling makes sense",
+                        "That sounds rough. I'm here to listen",
+                        "You deserve better than that",
+                        "Wish I could be there right now",
+                        "Life can be unfair sometimes"
                     ]
                 else:
                     fallback_responses = [
-                        "Was just thinking about you actually",
-                        "That's exactly what I needed to hear today",
-                        "Tell me more about that, I find everything about you fascinating",
-                        "You have such a unique way of seeing things, it's why I enjoy talking to you",
-                        "Can't believe we're on the same wavelength, again",
-                        "Love how you always make me think in new ways",
+                        "Was just thinking about you",
+                        "Thats what I needed to hear today",
+                        "Tell me more about that",
+                        "You have a unique way of seeing things",
+                        "Can't believe we're on the same wavelength",
                         "Your messages always make my day better",
-                        "Seriously impressed by your take on this",
-                        "You're making me smile just seeing your message",
-                        "That's so intriguing. I want to know more about how your mind works"
+                        "You're making me smile seeing your msg",
+                        "Thats interesting. I want to know more",
+                        "Been thinking about what you said earlier",
+                        "Had the same thought yesterday"
                     ]
                 ai_response = random.choice(fallback_responses)
+                ai_response = self.add_human_touches(ai_response)
             
             # Simulate realistic typing delay based on message length and add randomness
-            typing_delay = min(len(ai_response) / 15, 4.0) + random.uniform(0.5, 1.5)
+            typing_delay = min(len(ai_response) / 12, 3.0) + random.uniform(0.5, 1.5)
             time.sleep(typing_delay)
             
             return ai_response
             
         except Exception as e:
             logger.error(f"Error generating response: {e}", exc_info=True)
-            return "Was just thinking about you actually"  # Improved fallback
+            return "Was just thinking about you"  # Simple fallback
