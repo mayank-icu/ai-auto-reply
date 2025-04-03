@@ -21,4 +21,4 @@ COPY . .
 RUN chmod -R 777 /app
 
 # Set the command to run the application
-CMD ["python", "script.py"]
+CMD ["python", "main.py"]
