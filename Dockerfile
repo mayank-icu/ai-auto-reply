@@ -1,18 +1,26 @@
-# Use an official Python image with an updated OS
+# Use an official lightweight Python image
 FROM python:3.10-slim
-
-# Install necessary system libraries (including libGL.so.1)
-RUN apt-get update && apt-get install -y libgl1 && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy requirements.txt and install dependencies
+# Install system dependencies needed by OpenCV and other libraries
+RUN apt-get update && apt-get install -y \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    && apt-get clean
+
+# Upgrade pip to avoid the warning
+RUN pip install --upgrade pip
+
+# Copy requirements file and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your project files
+# Copy the rest of the application code
 COPY . .
 
-# Define the command to start your application (replace script.py with your actual script)
+# Command to run the script
 CMD ["python", "script.py"]
