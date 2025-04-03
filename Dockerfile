@@ -27,5 +27,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
+# Fix permissions issue by creating the log file and setting correct permissions
+RUN touch /app/instagram_bot.log && chmod 666 /app/instagram_bot.log
+
 # Set the command to run the application
 CMD ["python", "script.py"]
