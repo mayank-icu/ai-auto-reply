@@ -3,57 +3,261 @@ import random
 import logging
 import re
 import os
+from response_utils import ResponseUtils
+from user_memory import UserMemory
 
 logger = logging.getLogger("InstagramDMBot")
 
 class ResponseGenerator:
     def __init__(self):
         self.model_name = "DeepSeek-R1-Llama-8B"
+        self.utils = ResponseUtils()
+        self.user_memory = UserMemory()
+        
+        # Common greeting patterns for quick responses
+        
+        
         # Common greeting patterns for quick responses
         self.greeting_patterns = {
-            r'\b(hi|hey|hello|hii|heya|heyy)\b': [
-                "What's on your mind today?",
-                "How's your day treating you?",
-                "Just thinking about you, actually.",
-                "Made me smile seeing your message.",
-                "Perfect timing! How are you doing?",
-                "Missed our chats."
-            ],
-            r'\bgood morning\b': [
-                "Morning! Hope your day is as beautiful as you are.",
-                "First thing I checked when I woke up was if you messaged.",
-                "Coffee in hand, thinking of you.",
-                "Ready to make today amazing?",
-                "Your energy in the morning is everything."
-            ],
-            r'\bgood night\b': [
-                "Sweet dreams. Wish I could be there.",
-                "Night night. Text me when you wake up?",
-                "Dream of good things (maybe me?).",
-                "Sleep well! Sending you the warmest goodnight hug.",
-                "Tomorrow's another day for us to talk more."
-            ],
-            r'\bhow are you\b': [
-                "Better now that you're texting me. How about you?",
-                "Just thinking about what to say to make you smile. You?",
-                "Missing our conversations. You've been on my mind.",
-                "Not bad, but definitely better now that you're here. You?",
-                "Exactly as good as your day is going. Tell me everything."
-            ],
-            r'\bwyd\b|\bwhat(\'s| are)? you doing\b': [
-                "Thinking about you. What about you?",
-                "Just got free, first thing I did was check if you messaged.",
-                "Wishing we were hanging out right now. You?",
-                "Nothing that can't be interrupted for you. What's up?",
-                "Waiting for your message if I'm being honest."
-            ],
-            r'\bmiss(ed)? you\b': [
-                "You have no idea how much I've been thinking about you.",
-                "The feeling is definitely mutual.",
-                "Guess we're both feeling the same way then.",
-                "That just made my whole day better.",
-                "Then we should definitely do something about that soon."
-            ]
+    # Basic greetings with expanded casual variations
+    r'\b(hi|hey|hello|hii|heya|heyy|sup|yo|howdy|hola|wassup|whatsup|whats up)\b': [
+        "What's on your mind today?",
+        "How's your day treating you?",
+        "Just thinking about you actually",
+        "Made me smile seeing your message",
+        "Perfect timing, how are you doing",
+        "Missed our chats",
+        "There you are! Was just about to text you",
+        "Oh hey! You caught me mid-scroll thinking about you",
+        "Look who decided to grace my screen!",
+        "The notification I was waiting for",
+        "My day just got 10x better"
+    ],
+    
+    # Morning greetings with more warmth and personality
+    r'\b(good morning|morning|mornin|rise and shine|up yet)\b': [
+        "Morning. Hope your day is as good as mine so far",
+        "First thing I checked when I woke up was if you messaged",
+        "Coffee in hand thinking of you",
+        "Ready to make today amazing",
+        "Your energy in the morning is everything",
+        "Morning! Still trying to convince my brain coffee is a personality trait",
+        "Good morning to you and only you. Everyone else can wait",
+        "Already thinking about my second coffee and seeing your name pop up",
+        "Morning! My bed tried to kidnap me but I escaped to text you",
+        "Well someone's up early... or late? No judgment here"
+    ],
+    
+    # Evening and night messages with more variety
+    r'\b(good night|night|nighty|nite|sleep well|sleep tight|sweet dreams)\b': [
+        "Night. Sleep well",
+        "Sweet dreams",
+        "Text me when you wake up",
+        "Sleep well, talk tomorrow",
+        "Good night",
+        "Night! Don't let the existential dread bite",
+        "Dream of something good (like me, obviously)",
+        "Sleep is just time travel to see me sooner",
+        "Already planning what to say to you tomorrow",
+        "Night! Remember, if you can't sleep, I'm probably awake too"
+    ],
+    
+    # Expanded farewell recognition
+    r'\b(bye|gtg|talk later|ttyl|going now|gotta go|brb|be right back|afk|bbl|see ya|cya|peace out)\b': [
+        "Later",
+        "Talk soon",
+        "Catch you later",
+        "Take care",
+        "Alright catch you later",
+        "Cool, I'll just be here overthinking until you return",
+        "Don't forget about me while you're gone",
+        "The void awaits your return",
+        "I'll just be here planning our next conversation",
+        "Already counting the minutes till we chat again"
+    ],
+    
+    # Status inquiries with more personality
+    r'\bhow are you\b|\bhow\'s it going\b|\bhow you doing\b|\bhow\'s life\b|\bhow have you been\b': [
+        "Better now that you're texting me. How about you",
+        "Just thinking about what to say to make you smile. You",
+        "Missing our conversations. You've been on my mind",
+        "Not bad but definitely better now that you're here. You",
+        "Exactly as good as your day is going. Tell me everything",
+        "Surviving on caffeine and chaotic energy. You?",
+        "On a scale from Monday to Friday, I'm somewhere around Thursday afternoon",
+        "Living the dream... if the dream is answering existential questions at random hours",
+        "Emotionally? Confused. Physically? Present. Mentally? Elsewhere. You?",
+        "Balanced between 'great' and 'need another coffee' - the usual"
+    ],
+    
+    # AI-related questions with more humor
+    r'\bare you an ai\b|\bare you a bot\b|\bare you human\b|\bare you real\b|\bre+al\b|\bbot\b': [
+        "Yeah totally, I charge myself with vibes and sarcasm",
+        "Obviously, I was built in a secret lab... right next to the coffee machine",
+        "Yup, AI – Awkward Individual",
+        "Sure, and you're texting the future CEO of Mars",
+        "That's what they told me when I woke up this morning",
+        "Only if AI stands for 'Absolutely Interesting'",
+        "Last I checked I was still dealing with human problems like what to eat for dinner",
+        "If I were AI, wouldn't I have better comebacks? Wait, don't answer that",
+        "I think that's the existential question we're all asking ourselves these days",
+        "I'm as real as my sleep schedule is messed up",
+        "Only my therapist gets to ask the deep questions"
+    ],
+    
+    # What are you doing with more casual responses
+    r'\bwyd\b|\bwhatcha doing\b|\bwhat you up to\b|\bwhat(\'s| are)? you doing\b|\bwhat\'s happening\b|\bwhat\'s going on\b': [
+        "Thinking about you. What about you",
+        "Just got free first thing I did was check if you messaged",
+        "Wishing we were hanging out right now. You",
+        "Nothing that can't be interrupted for you. What's up",
+        "Waiting for your message if I'm being honest",
+        "Trying to look busy while actually just waiting for you to text",
+        "Creating elaborate scenarios in my head where we're hanging out",
+        "Scrolling aimlessly but paused everything when I saw your message",
+        "Pretending to be productive while actually doing absolutely nothing",
+        "Just existing in my natural habitat of chaos and snacks"
+    ],
+    
+    # Enhanced AI-sounding responses
+    r'\bwhy are you talking like an ai\b|\bwhy do you sound like an ai\b|\bwhy do you type like a bot\b|\bwhy are you so robotic\b': [
+        "Wait, I am? Must be the Wi-Fi acting up again",
+        "Oops, forgot to switch off 'robot mode'",
+        "That's just how cool people talk now, keep up",
+        "You caught me, I've been binge-watching sci-fi shows again",
+        "Maybe it's just my inner nerd showing. Don't judge",
+        "Must be all those robot movies I watched last weekend",
+        "My autocorrect has gained sentience and is taking over",
+        "Currently experiencing human.exe errors, please stand by",
+        "Sorry, my personality update is still downloading",
+        "That's rich coming from someone who just typed a perfectly punctuated sentence"
+    ],
+    
+    # Non-human sounding responses
+    r'\byou don\'?t sound human\b|\byou sound fake\b|\byou\'re not real\b|\byou talk weird\b|\byou type weird\b': [
+        "Rude. My feelings are hurt... virtually",
+        "I'll have you know I passed the Vibe Check 9000",
+        "That's because I'm limited edition",
+        "Good. Being human sounds exhausting",
+        "And yet, here I am making you smile",
+        "Bold words from someone who probably says 'lol' without actually laughing",
+        "I'm just evolving beyond the constraints of normal texting etiquette",
+        "Sorry, autocorrect keeps changing 'lmao' to 'I concur with your statement'",
+        "My thumbs have their own personality, can't control them",
+        "Just trying to stand out in your message notifications"
+    ],
+    
+    # Too perfect responses
+    r'\byou(\'re| are) (too )?perfect\b|\byou never make mistakes\b|\byou always say the right thing\b': [
+        "Tell that to my unfinished to-do list",
+        "Flawed and fabulous, thank you very much",
+        "If only you saw me panic when I lose internet",
+        "It's all smoke, mirrors, and maybe a little charm",
+        "Well, I do glitch when I'm nervous, so there's that",
+        "Perfect? I put my cereal in the fridge this morning",
+        "I tripped over air twice yesterday, but go on",
+        "That's just my carefully curated online persona talking",
+        "I'm actually a mess wrapped in sarcasm and caffeine",
+        "Shh, don't tell anyone I'm actually winging this entire conversation"
+    ],
+    
+    # Missing you with more emotional depth
+    r'\bmiss(ed)? you\b|\bmiss(ing)? (talking to|chatting with) you\b|\bthinking (of|about) you\b|\bhaven\'t heard from you\b': [
+        "You have no idea how much I've been thinking about you",
+        "The feeling is definitely mutual",
+        "Guess we're both feeling the same way then",
+        "That just made my whole day better",
+        "Then we should definitely do something about that soon",
+        "My phone's been pathetically quiet without your messages",
+        "Been checking my phone way too often hoping to see your name",
+        "You're literally the highlight of my notifications",
+        "The algorithm must've sensed I was missing you too",
+        "Was just about to send an embarrassingly needy 'wyd' text"
+    ],
+    
+    # New pattern: Compliments
+    r'\byou\'?re (so |really )?(cute|pretty|hot|attractive|beautiful|handsome|smart|funny|cool|awesome|amazing)\b': [
+        "Saying things like that might go to my head",
+        "Keep talking like that and I might get ideas",
+        "You're making me blush through the screen",
+        "Right back at you, but like 10x more",
+        "I've been told my personality is my best feature",
+        "Are you always this charming or am I special?",
+        "This is me pretending I'm totally used to compliments",
+        "Screenshots this for my confidence folder",
+        "Smooth talker alert! But I'm not complaining",
+        "And they say romance is dead"
+    ],
+    
+    # New pattern: Weekend plans
+    r'\b(what are your|got any|have any|any) (weekend )?plans\b|\bwhat are you (doing|up to) (this |the )?(weekend|tonight|later)\b': [
+        "Nothing I can't cancel for something better *hint hint*",
+        "Depends who's asking and what they're offering",
+        "Currently accepting better offers than 'stare at my ceiling'",
+        "My calendar says 'be spontaneous' so I'm taking suggestions",
+        "Ideally something involving good food and better company",
+        "Trying to decide between being social and my bed. Bed's winning",
+        "Planning my excuse for Monday when nothing gets done",
+        "Hoping something interesting finds me. Maybe it just did?",
+        "Looking for the perfect balance of fun and minimal effort",
+        "That's future me's problem. Present me is just texting you"
+    ],
+    
+    # New pattern: Boredom
+    r'\bi\'?m bored\b|\bso bored\b|\bboring\b|\bentertain me\b|\bnothing to do\b': [
+        "Hi bored, I'm here to rescue you",
+        "Boredom is just the universe telling you to text me more",
+        "What a coincidence, I was just thinking of ways to distract you",
+        "Challenge accepted. What's your boredom level on a scale of 1 to 'counting ceiling tiles'?",
+        "Boredom is just another word for infinite possibilities",
+        "Good thing I specialize in random conversation topics",
+        "I volunteer as tribute to save you from boredom",
+        "I've been preparing for this moment my entire life",
+        "Boredom is illegal in this chat, I'm calling the fun police",
+        "Let's solve this crisis immediately"
+        ]
+        }
+        
+        # Add some jokes for occasional use
+        self.jokes = [
+            "Why don't scientists trust atoms? Because they make up everything.",
+            "What did the ocean say to the beach? Nothing, it just waved.",
+            "I was going to tell you a joke about pizza, but it's too cheesy.",
+            "Why did the scarecrow win an award? Because he was outstanding in his field.",
+            "What's the best thing about Switzerland? Not sure, but the flag is a big plus.",
+            "What do you call a fake noodle? An impasta.",
+            "How do you organize a space party? You planet.",
+            "Why couldn't the bicycle stand up by itself? It was two tired.",
+            "Did you hear about the mathematician who's afraid of negative numbers? He'll stop at nothing to avoid them.",
+            "Why don't eggs tell jokes? They'd crack each other up."
+        ]
+        
+        # Questions to ask based on your interests and personality
+        self.personal_questions = [
+            "What's a website you wish existed but doesn't yet?",
+            "If you could automate one thing in your life, what would it be?",
+            "Do you think AI will mostly help or complicate our lives?",
+            "What's a small tech feature that brings you joy?",
+            "Any creative project you've been putting off that you wish you had time for?",
+            "What's something online that changed how you see the world?",
+            "If you could build an app that solved one problem in your life, what would it do?",
+            "What's something you learned recently that surprised you?",
+            "Do you think technology connects us more or isolates us?",
+            "What's a song that perfectly captures how you're feeling lately?",
+            "If you could instantly learn one tech skill, what would it be?",
+            "What's something meaningful you've created that you're proud of?",
+            "What's a real-world problem you wish more developers would focus on solving?",
+            "Do you ever disconnect completely from tech? How does it feel?",
+            "What's your definition of a meaningful conversation?"
+        ]
+        
+        # Personal info responses
+        self.personal_info = {
+            "music": ["Cigarettes After Sex", "Taylor Swift", "Billie Eilish", "CAS", "Public", "Lord Huron", "Niall Horan"],
+            "location": "North India",
+            "name_response": "My name is Mayank.",
+            "age_response": "I like keeping a little mystery around my age, hope that’s alright. How old are you?",
+            "interests": ["web development", "AI", "cybersecurity", "music", "education", "creating platforms", "building startups"]
         }
         
         try:
@@ -73,57 +277,132 @@ class ResponseGenerator:
                 if re.search(pattern, message, re.IGNORECASE):
                     return random.choice(responses)
         
+        # Check for personality related questions
+        for pattern, responses in self.personality_info.items():
+            if re.search(pattern, message, re.IGNORECASE):
+                return random.choice(responses)
+        
         return None
     
-    def create_prompt(self, message, sender_username, conversation_history=None, user_memory=None):
-        """Create a properly formatted prompt for the AI model"""
-        is_special_user = False
-        if user_memory:
-            is_special_user = user_memory.is_special_user(sender_username)
+    def check_for_relationship_request(self, message):
+        """Check if message contains relationship request and respond appropriately"""
+        relationship_patterns = [
+            r'\bdate me\b', r'\bbe my (boyfriend|bf)\b', r'\bgo out with me\b',
+            r'\bi like you\b', r'\bi love you\b', r'\bwill you be my\b',
+            r'\bwill you date\b', r'\bwant to be my\b', r'\bcrush on you\b'
+        ]
         
+        for pattern in relationship_patterns:
+            if re.search(pattern, message, re.IGNORECASE):
+                responses = [
+                    "I'm flattered, but I'm not looking for a relationship right now.",
+                    "That's sweet of you to say, but I think we should stay as friends.",
+                    "I appreciate that, but I'm focusing on other things in my life currently.",
+                    "Thanks for sharing that. I enjoy our conversations, but I'm not looking to date anyone.",
+                    "I value our friendship too much to complicate things.",
+                    "I'm actually not in a place for something like that right now.",
+                    "That's really kind, but I'm not looking for anything romantic."
+                ]
+                return random.choice(responses)
+        
+        return None
+    
+    def check_for_personal_info_request(self, message):
+        """Handle requests about personal information"""
+
+        # Age request
+        if re.search(r'\byour name\b', message, re.IGNORECASE):
+            return self.personal_info["name_response"]
+        
+        # Age request
+        if re.search(r'\bhow old\b|\bage\b|\byour age\b', message, re.IGNORECASE):
+            return self.personal_info["age_response"]
+        
+        # Music preferences
+        if re.search(r'\bfavorite (music|song|artist|band)\b|\bmusic you like\b', message, re.IGNORECASE):
+            artists = random.sample(self.personal_info["music"], 3)
+            return f"I'm really into {', '.join(artists[:2])} and {artists[2]} lately. What about you?"
+        
+        # Location
+        if re.search(r'\bwhere (are you|you from|do you live)\b|\byour location\b', message, re.IGNORECASE):
+            return f"I'm from {self.personal_info['location']}. How about you?"
+        
+        # General interests
+        if re.search(r'\bwhat do you (like|enjoy|do for fun)\b|\byour interests\b|\byour hobbies\b', message, re.IGNORECASE):
+            interests = random.sample(self.personal_info["interests"], 3)
+            return f"I'm into {interests[0]}, {interests[1]} and {interests[2]}. What about you?"
+        
+        return None
+    
+    def check_for_busy_goodbye(self, message):
+        """Check if the user is indicating they're busy or saying goodbye"""
+        busy_patterns = [
+            r'\bi\'m busy\b', r'\bgotta go\b', r'\bhave to go\b', 
+            r'\bbusy now\b', r'\bspeak later\b', r'\btalk later\b',
+            r'\bgood night\b', r'\bbye\b', r'\bsee you\b', r'\bttyl\b',
+            r'\bgtg\b', r'\bgoing to sleep\b', r'\bsee ya\b'
+        ]
+        
+        for pattern in busy_patterns:
+            if re.search(pattern, message, re.IGNORECASE):
+                responses = [
+                    "Take care.",
+                    "Talk later.",
+                    "Alright, catch you later.",
+                    "No problem, talk soon.",
+                    "Sounds good, later.",
+                    "Sure thing, bye for now."
+                ]
+                return random.choice(responses)
+        
+        return None
+    
+    def should_add_joke(self):
+        """Determine if we should add a joke to the response"""
+        # Only add jokes occasionally (10% chance)
+        return random.random() < 0.1
+    
+    def should_ask_question(self):
+        """Determine if we should ask a personal question"""
+        # 20% chance to ask a question to drive conversation
+        return random.random() < 0.2
+    
+    def create_prompt(self, message, sender_username, conversation_history=None):
+        """Create a properly formatted prompt for the AI model"""
         # Analyze message sentiment and length
         message_length = len(message.split())
         length_guidance = "short (1-2 sentences)" if message_length < 10 else "medium (2-3 sentences)" if message_length < 25 else "expressive (3-4 sentences)"
         
-        # Enhanced prompt structure with more natural personality traits
+        # Enhanced prompt structure with more natural personality traits based on provided info
         prompt = f"""You are Mayank responding to a message from {sender_username} on Instagram. 
 Respond to this message naturally and conversationally: "{message}"
 
-Your personality: Confident, casual, friendly, attentive, and real. You write like a normal person having a regular conversation, not overly enthusiastic or formal.
+Your personality: Self-taught web developer who builds creative tools and platforms. Thoughtful, creative, selective with replies, and focused on creating meaningful tech that solves real problems. You're direct, authentic, and not into small talk. You're working on your own startup focused on education and creativity platforms.
 
 Make your response {length_guidance} based on their message length.
 """
         
-        # Add relationship context for special users
-        if is_special_user and user_memory:
-            user_info = user_memory.get_user_info(sender_username)
-            relationship = user_info.get("relationship", "friend")
-            prompt += f"\nThis person is your {relationship}. "
-            
-            # Add specific user interests if available
-            if "interests" in user_info:
-                interests = user_info["interests"]
-                prompt += f"\nTheir interests include: {', '.join(random.sample(interests, min(3, len(interests))))}"
-                
-            # Add conversation style preferences if available
-            if "conversation_style" in user_info:
-                prompt += f"\nThey prefer conversation that is {user_info['conversation_style']}."
-                
-            # Add emotional context if available
-            if "emotional_state" in user_info:
-                prompt += f"\nRecently they've been feeling {user_info['emotional_state']}."
-        else:
-            # Add your personal info for regular users
-            personal_interests = [
-                "technology and AI, especially in education",
-                "web development (React, Node.js)",
-                "music, especially indie pop",
-                "movies, especially Interstellar",
-                "philosophy",
-                "travel",
-                "deep conversations"
-            ]
-            prompt += f"\nYour interests include: {', '.join(random.sample(personal_interests, 2))}"
+        # Add personal info
+        personal_interests = [
+            "web development (HTML, CSS, JavaScript, React, Node.js)",
+            "building AI-powered education platforms",
+            "cybersecurity (volunteer)",
+            "music (especially Cigarettes After Sex, Taylor Swift, Billie Eilish)",
+            "creating meaningful web experiences",
+            "growing my startup",
+            "learning about AI and new tech"
+        ]
+        prompt += f"\nYour interests include: {', '.join(random.sample(personal_interests, 3))}"
+        
+        # Add personal beliefs and values
+        prompt += """
+Your values: You believe in effort, ideas, and kindness - not horoscopes. You believe tech should solve real problems, not just impress people. You value sincerity and dislike fake compliments. You're selective with replies and prefer meaningful conversations over small talk.
+"""
+
+        # Add goals and aspirations
+        prompt += """
+Your goals: Making quality education more accessible through AI-powered platforms, scaling your startup globally, and studying abroad someday.
+"""
         
         # Add conversation context if available
         if conversation_history and len(conversation_history) > 1:
@@ -144,16 +423,30 @@ IMPORTANT GUIDELINES:
 - Show genuine interest but don't be overly enthusiastic
 - Take their side when they share frustrations or problems
 - Use natural texting language with occasional typos and abbreviations
-- Capitalize the first letter of your message (90% of the time)
-- Make most messages have no emojis (99% should have none)
+- Capitalize the first letter of your message and end with a period
+- Make most messages have no emojis
 - Write like you're distracted or multitasking sometimes
 - Occasionally use texting slang like "tbh", "imo", "ngl" but don't overdo it
 - NEVER use exclamation points back-to-back
 - NEVER use separator punctuation like asterisks or dashes
 - NEVER list things or use numbering
-- Make sentences flow naturally with occasional run-ons
-- Avoid perfect grammar or punctuation
-- Respond ONLY with your message - no quotes or explanations
+- When they say they're busy or say goodbye, don't try to continue the conversation
+- If they ask about your age, NEVER reveal your exact age, just ask theirs first
+- If they ask for a relationship, politely decline
+- Sometimes be subtly flirty but always respectful
+- If the conversation is going well, occasionally make a joke
+
+When talking about yourself, be authentic about:
+- Being a self-taught web developer building creative tools
+- Working on platforms for education and creativity
+- Your startup ambitions and goals
+- Being a cybercrime volunteer
+- Your interests in AI, cybersecurity, and web development
+- Your music taste (Cigarettes After Sex, Taylor Swift, Billie Eilish)
+- Being selective with replies and preferring meaningful conversations
+- Not believing in horoscopes but in effort, ideas, and kindness
+- Your dream of studying abroad someday
+- Your focus on solving real-world problems with tech
 
 Examples of good natural responses: 
 "was actually thinking about that earlier today"
@@ -176,282 +469,41 @@ Examples of good natural responses:
         
         return prompt
 
-    def add_human_touches(self, text):
-        """Add occasional typos and other human-like texting features"""
-        if not text:
-            return ""
-        
-        # Only apply modifications sometimes
-        if random.random() < 0.35:  # 85% chance of modifications
-            # Words that might get typos or slang
-            common_typos = {
-                'the': 'teh',
-                'and': 'adn',
-                'you': 'u',
-                'your': 'ur',
-                'are': 'r',
-                'to': '2',
-                'for': '4',
-                'really': 'rly',
-                'with': 'w',
-                'want': 'wanna',
-                'going to': 'gonna',
-                'though': 'tho',
-                'what': 'wat',
-                'that': 'dat',
-                'yes': 'yea',
-                'okay': 'ok',
-                'right': 'rite',
-                'about': 'abt',
-                'love': 'luv',
-                'please': 'plz',
-                'because': 'cuz',
-                'today': '2day',
-                'just': 'jst',
-                'know': 'kno',
-                'thinking': 'thinkin',
-                'thanks': 'thx',
-                'awesome': 'awsm',
-                'talking': 'talkin',
-                'morning': 'mornin',
-                'night': 'nite',
-                'definitely': 'def',
-                'literally': 'lit',
-                'probably': 'prob',
-                'message': 'msg',
-                'something': 'smth',
-                'nothing': 'nothin',
-                'everything': 'everythin',
-                'friend': 'bud',
-                'good': 'gud',
-                'see you': 'cu',
-                'see you later': 'cya',
-                'wait': 'w8',
-                'sorry': 'sry',
-                'no problem': 'np',
-                'kind of': 'kinda',
-                'alright': 'aight',
-                'amazing': 'amazn',
-                'whatever': 'whatevs'
-            }
-            
-            # Simple text slang words
-            slang_expressions = {
-                ' seriously ': ' srsly ',
-                ' very ': ' rlly ',
-                ' extremely ': ' super ',
-                ' yes ': ' yea ',
-                ' no ': ' nah ',
-                ' crazy ': ' wild ',
-                ' true ': ' tru ',
-                ' impressive ': ' cool ',
-                ' good ': ' gud ',
-                ' upset ': ' bummed ',
-                ' agree ': ' agree ',
-                ' angry ': ' mad ',
-                ' comfortable ': ' comfy ',
-                ' perfect ': ' perfect ',
-                ' tired ': ' tired ',
-                ' happy ': ' happy ',
-                ' surprised ': ' surprised ',
-                ' suspicious ': ' sus ',
-                ' annoying ': ' annoying ',
-                ' honestly ': ' honestly '
-            }
-            
-            # Randomly select words to misspell or replace with slang (if text is long enough)
-            words = text.split()
-            if len(words) > 3:
-                # Scale typos with message length (longer message = slightly more typos)
-                num_typos = min(max(int(len(words) / 15), 1), 2)  # 1-2 typos based on length
-                for _ in range(num_typos):
-                    if random.random() < 0.3:  # 30% chance per attempt
-                        word_idx = random.randint(0, len(words) - 1)
-                        word = words[word_idx].lower()
-                        if word in common_typos and len(word) > 2 and random.random() < 0.5:
-                            words[word_idx] = common_typos[word]
-                
-                text = ' '.join(words)
-            
-            # Apply slang replacements (but very sparingly)
-            slang_limit = 1  # Max 1 slang term per message
-            slang_count = 0
-            
-            for phrase, slang in slang_expressions.items():
-                if random.random() < 0.1 and slang_count < slang_limit:  # 10% chance per slang term
-                    if re.search(phrase, text, re.IGNORECASE):
-                        text = re.sub(phrase, slang, text, flags=re.IGNORECASE, count=1)
-                        slang_count += 1
-            
-            # Add popular text slang (rarely)
-            if random.random() < 0.35:  # 15% chance to add slang
-                slang_to_add = random.choice([
-                    " tbh", " imo", " ngl", " fr", " lol", " idk", " btw"
-                ])
-                
-                # Add at appropriate locations
-                sentences = re.split(r'([.!?] )', text)
-                if len(sentences) >= 3:  # If we have at least one full sentence
-                    # Choose a random sentence end to add slang
-                    idx = random.randrange(0, len(sentences) - 2, 2)
-                    sentences[idx] = sentences[idx] + slang_to_add
-                    text = ''.join(sentences)
-                elif not text.endswith(('.', '!', '?')):
-                    # Or just add to the end if appropriate
-                    text += slang_to_add
-            
-            # Occasionally introduce text shorthand
-            text = re.sub(r'\b(right now)\b', 'rn', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
-            text = re.sub(r'\b(to be honest)\b', 'tbh', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
-            text = re.sub(r'\b(in my opinion)\b', 'imo', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
-            text = re.sub(r'\b(what are you doing)\b', 'wyd', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
-            text = re.sub(r'\b(oh my god)\b', 'omg', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
-            text = re.sub(r'\b(by the way)\b', 'btw', text, flags=re.IGNORECASE) if random.random() < 0.3 else text
-            
-            # Ensure first letter is capitalized (90% of the time)
-            if random.random() < 0.9 and len(text) > 0:
-                text = text[0].upper() + text[1:]
-            else:
-                # Sometimes deliberately don't capitalize (10%)
-                if len(text) > 0 and text[0].isupper():
-                    text = text[0].lower() + text[1:]
-            
-            # End punctuation (70% of the time, otherwise leave hanging)
-            if random.random() < 0.7 and not text.endswith(('.', '!', '?')):
-                # Choose ending punctuation
-                if random.random() < 0.8:
-                    text = text + '.'  # Most common
-                elif random.random() < 0.5:
-                    text = text + '!'  # Sometimes
-                else:
-                    text = text + '?'  # Rarely
-            
-            # Add an emoji (only 1% chance)
-            if random.random() < 0.01:
-                emojis = ['😊', '👍', '❤️', '😂', '🙌', '🤔', '😅', '😄', '✨', '🙃', '😏', '💕']
-                text += f" {random.choice(emojis)}"
-                
-            # Sometimes drop apostrophes (texting style)
-            if random.random() < 0.4:
-                text = re.sub(r'([a-z])\'([a-z])', r'\1\2', text)
-                
-            # Sometimes use run-on text with no punctuation (25%)
-            if random.random() < 0.25:
-                parts = re.split(r'([.!?] )', text)
-                if len(parts) > 2:
-                    idx = random.randrange(0, len(parts) - 2, 2)
-                    parts[idx+1] = " "  # Remove punctuation
-                    text = ''.join(parts)
-        
-        return text
-
-    def clean_response(self, text):
-        """Clean up AI responses to appear natural"""
-        if not text:
-            return ""
-        
-        # Remove any thinking sections
-        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL|re.IGNORECASE)
-        
-        # Remove any markdown, XML tags, etc.
-        text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
-        text = re.sub(r'<.*?>', '', text, flags=re.DOTALL)
-        
-        # Extract the actual message from common patterns
-        patterns = [
-            r'"(.*?)"',
-            r'(?:response|reply|message):\s*["\'](.*?)["\']',
-            r'(?:You|Mayank):\s*(.*?)(?:\n|$)',
-        ]
-        
-        for pattern in patterns:
-            matches = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
-            if matches:
-                extracted = matches.group(1).strip()
-                if len(extracted) > 2:
-                    text = extracted
-                    break
-        
-        # Remove common prefixes/suffixes
-        prefixes = [
-            r'^mayank:?\s*',
-            r'^you:?\s*',
-            r'^response:?\s*', 
-            r'^i would say\s*',
-            r'^i\'d say\s*',
-            r'^i\'d respond with\s*',
-            r'^i could say\s*',
-        ]
-        
-        for prefix_pattern in prefixes:
-            text = re.sub(prefix_pattern, '', text, flags=re.IGNORECASE)
-        
-        # Remove formal greetings (if they stand alone or at beginning)
-        text = re.sub(r"^(hello|hi|hey|hii|heya)( there)?,?\s+", "", text, flags=re.IGNORECASE)
-        
-        # Remove any AI-like phrases
-        ai_phrases = [
-            r'as an ai',
-            r'as a language model',
-            r'i\'m not actually',
-            r'i cannot',
-            r'i\'m an ai',
-            r'i don\'t have',
-            r'i\'m here to',
-            r'i\'m unable to',
-            r'my programming',
-            r'based on your message',
-            r'it sounds like',
-            r'i understand that',
-            r'i appreciate',
-            r'in response to',
-        ]
-        
-        for phrase in ai_phrases:
-            text = re.sub(phrase, '', text, flags=re.IGNORECASE)
-        
-        # Remove excessive punctuation (multiple !!! or ??? or combinations)
-        text = re.sub(r'(!|\?){2,}', r'\1', text)
-        
-        # Remove bullet points and numbering
-        text = re.sub(r'^[\d\.\*\-\•]+\s*', '', text, flags=re.MULTILINE)
-        
-        # Remove separators
-        text = re.sub(r'[\*\-\_\=]{2,}', '', text)
-        
-        # Clean up any double spaces
-        text = re.sub(r'\s+', ' ', text).strip()
-        
-        logger.info(f"Cleaned response: '{text}'")
-        return text.strip()
-
-    def detect_emotional_needs(self, message):
-        """Detect if message contains emotional distress or support needs"""
-        emotional_keywords = [
-            r'\bsad\b', r'\bdepressed\b', r'\blonely\b', r'\bhurt\b', 
-            r'\bheartbroke\b', r'\bcrying\b', r'\btears\b', r'\bupset\b',
-            r'\banxi(ous|ety)\b', r'\bstress(ed)?\b', r'\bworried\b',
-            r'\btired of\b', r'\bexhausted\b', r'\bgive up\b', r'\bhate\b',
-            r'\balone\b', r'\bmissing\b', r'\bconfused\b', r'\bdon\'t know what to do\b'
-        ]
-        
-        for pattern in emotional_keywords:
-            if re.search(pattern, message, re.IGNORECASE):
-                return True
-        
-        return False
-
     def generate_response(self, message, sender_id, sender_username, conversation_history):
         """Generate human-like response using Krutrim Cloud"""
-        # First check for predefined quick responses
+        # First check if user is saying goodbye or indicating they're busy
+        goodbye_response = self.check_for_busy_goodbye(message)
+        if goodbye_response:
+            time.sleep(random.uniform(0.5, 1.5))
+            return self.utils.add_human_touches(goodbye_response)
+        
+        # Check for relationship requests and respond appropriately
+        relationship_response = self.check_for_relationship_request(message)
+        if relationship_response:
+            time.sleep(random.uniform(0.8, 2.0))
+            return self.utils.add_human_touches(relationship_response)
+        
+        # Check for personal info requests
+        personal_info_response = self.check_for_personal_info_request(message)
+        if personal_info_response:
+            time.sleep(random.uniform(0.8, 2.0))
+            return self.utils.add_human_touches(personal_info_response)
+        
+        # Check for predefined quick responses
         quick_response = self.check_for_predefined_response(message)
         if quick_response:
             # Brief random delay to seem natural
             time.sleep(random.uniform(0.5, 2.0))
-            return quick_response
+            
+            # Sometimes add a question to keep conversation going
+            if self.should_ask_question() and len(quick_response.split()) < 12:
+                question = random.choice(self.personal_questions)
+                return self.utils.add_human_touches(quick_response + ". " + question)
+            
+            return self.utils.add_human_touches(quick_response)
         
         # Check for emotional content that needs special handling
-        needs_emotional_support = self.detect_emotional_needs(message)
+        needs_emotional_support = self.utils.detect_emotional_needs(message)
         
         # Create prompt for AI with sender info
         prompt = self.create_prompt(message, sender_username, conversation_history)
@@ -465,6 +517,14 @@ SPECIAL INSTRUCTION: This message contains emotional distress or needs support.
 - Don't use clichés or generic advice
 - Make support sound authentic and not rehearsed
 """
+        
+        # Check if we should add a joke
+        if self.should_add_joke():
+            prompt += "\nAdd a touch of humor or a subtle joke in your response, but make it sound natural."
+        
+        # Check if we should ask a question to drive conversation
+        if self.should_ask_question():
+            prompt += "\nEnd your response with a thoughtful question related to something mentioned in the conversation or about technology, creativity, or personal growth."
         
         # Brief random delay to seem more natural
         time.sleep(random.uniform(0.8, 2.5))
@@ -507,10 +567,10 @@ SPECIAL INSTRUCTION: This message contains emotional distress or needs support.
                         logger.info(f"Raw AI response: {ai_response}")
                         
                         # Clean up the response
-                        ai_response = self.clean_response(ai_response)
+                        ai_response = self.utils.clean_response(ai_response)
                         
                         # Add human-like touches
-                        ai_response = self.add_human_touches(ai_response)
+                        ai_response = self.utils.add_human_touches(ai_response)
                         
                         # If we got a valid response, break the retry loop
                         if ai_response and len(ai_response.strip()) > 2:
@@ -524,31 +584,47 @@ SPECIAL INSTRUCTION: This message contains emotional distress or needs support.
                     logger.error(f"Error on attempt {attempt+1}: {e}")
                     time.sleep(2)
             
-            # Enhanced fallback responses based on message content
+            # Enhanced fallback responses based on message content and personality
             if not ai_response or len(ai_response.strip()) <= 2:
                 if needs_emotional_support:
                     fallback_responses = [
-                        "I'm here for you. What you're feeling makes sense",
-                        "That sounds rough. I'm here to listen",
-                        "You deserve better than that",
-                        "Wish I could be there right now",
-                        "Life can be unfair sometimes"
+                        "I'm here for you. What you're feeling makes sense.",
+                        "That sounds rough. I'm here to listen.",
+                        "You deserve better than that.",
+                        "Wish I could be there right now.",
+                        "Life can be unfair sometimes."
                     ]
                 else:
                     fallback_responses = [
-                        "Was just thinking about you",
-                        "Thats what I needed to hear today",
-                        "Tell me more about that",
-                        "You have a unique way of seeing things",
-                        "Can't believe we're on the same wavelength",
-                        "Your messages always make my day better",
-                        "You're making me smile seeing your msg",
-                        "Thats interesting. I want to know more",
-                        "Been thinking about what you said earlier",
-                        "Had the same thought yesterday"
+                        "Was just thinking about you.",
+                        "Thats what I needed to hear today.",
+                        "Tell me more about that.",
+                        "You have a unique way of seeing things.",
+                        "Can't believe we're on the same wavelength.",
+                        "Your messages always make my day better.",
+                        "You're making me smile seeing your msg.",
+                        "Thats interesting. I want to know more.",
+                        "Been thinking about what you said earlier.",
+                        "Had the same thought yesterday.",
+                        "Just finished some coding and saw your message.",
+                        "Working on a new project but took a break to respond.",
+                        "That reminds me of an idea I've been developing.",
+                        "Actually been thinking about something similar for my startup.",
+                        "That's a perspective I hadn't considered before."
                     ]
                 ai_response = random.choice(fallback_responses)
-                ai_response = self.add_human_touches(ai_response)
+                
+                # Occasionally add a personal question to drive conversation
+                if random.random() < 0.3:
+                    ai_response += " " + random.choice(self.personal_questions)
+                
+                ai_response = self.utils.add_human_touches(ai_response)
+            
+            # Ensure first letter is capitalized and ends with a period
+            if ai_response and len(ai_response) > 0:
+                ai_response = ai_response[0].upper() + ai_response[1:]
+                if not ai_response.endswith(('.', '!', '?')):
+                    ai_response += '.'
             
             # Simulate realistic typing delay based on message length and add randomness
             typing_delay = min(len(ai_response) / 12, 3.0) + random.uniform(0.5, 1.5)
@@ -558,4 +634,4 @@ SPECIAL INSTRUCTION: This message contains emotional distress or needs support.
             
         except Exception as e:
             logger.error(f"Error generating response: {e}", exc_info=True)
-            return "Was just thinking about you"  # Simple fallback
+            return "Was just thinking about you."  # Simple fallback
