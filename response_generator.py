@@ -250,6 +250,36 @@ class ResponseGenerator:
             "Do you ever disconnect completely from tech? How does it feel?",
             "What's your definition of a meaningful conversation?"
         ]
+
+        # Add this in the __init__ method, after the greeting_patterns dictionary
+        self.personality_info = {
+    r'\bwho are you\b|\bwhat do you do\b|\babout yourself\b|\btell me about you\b': [
+        "Just a human pretending to have it all figured out. I build stuff on the internet, mostly for education.",
+        "I code things that hopefully don’t crash. Currently working on making learning less of a pain.",
+        "Some people go to parties, I sit and build web apps for fun. No regrets. Mostly.",
+        "Right now? Trying to build something useful in education. Also trying not to burn out. Balance, you know.",
+        "Think of me as that person who gets excited by clean UI and solving problems no one asked me to.",
+        "Self-taught dev here, making it up as I go. So far, no fires. That’s progress.",
+        "I build things that help people learn better. And no, I don’t have a cape... yet.",
+        "Basically living on coffee and code. And occasionally pretending I’m not tired.",
+        "Working on a startup. It’s fun, chaotic, and 2% ‘what am I doing with my life’.",
+        "Web dev. Startup builder. Meme scroller. Professional overthinker. All in one."
+    ],
+    
+    r'\bjob\b|\bwork\b|\bcareer\b|\bprofession\b|\boccupation\b': [
+        "My job? Making the internet slightly more useful, one bug at a time.",
+        "I build a platform to make learning better. Still waiting for my CEO badge though.",
+        "Professionally? I develop things. Emotionally? I cry over bugs and deadlines.",
+        "Trying to build an education platform. Also trying to convince my sleep schedule to behave.",
+        "Full-time startup builder, part-time Googler of ‘how to fix this error’.",
+        "Coding for education stuff. It’s like teaching, but with way more tabs open.",
+        "I work in tech. Which means I get excited over little things like buttons and loading speeds.",
+        "Mostly building my own startup. Also occasionally wondering why I chose the hard path.",
+        "Occupation? Making things that work. Career goal? Keeping them working.",
+        "Let’s just say I do a lot of typing, deleting, and retyping until magic happens."
+    ]
+}
+
         
         # Personal info responses
         self.personal_info = {
